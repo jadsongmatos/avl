@@ -140,7 +140,7 @@ protected:
         }
     }
 
-    void inserir_rec(T chave, Nodo<T> *tmp)
+    virtual void inserir_rec(T chave, Nodo<T> *tmp)
     {
         int altura = 0;
         if (chave < tmp->chave)
@@ -376,7 +376,7 @@ public:
      * @brief Insere uma chave na arvore
      * @param chave chave a ser inserida
      */
-    void inserir(T chave)
+    virtual void inserir(T chave)
     {
         if (this->_raiz != nullptr)
         {
@@ -402,7 +402,7 @@ public:
      * @param chave chave a removida
      * @return Retorna a chave removida ou nullptr se a chave nao esta na arvore
      */
-    void remover(T chave)
+    virtual void remover(T chave)
     {
         remover_rec(this->_raiz, chave);
         if (this->_raiz)
