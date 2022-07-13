@@ -2,7 +2,7 @@
 #define MINHA_ARVORE_AVL_HPP
 
 #include "MinhaArvoreDeBuscaBinaria.h"
-
+//#include <algorithm>
 /**
  * @brief Representa uma árvore AVL.
  *
@@ -12,97 +12,51 @@ template <typename T>
 class MinhaArvoreAVL final : public MinhaArvoreDeBuscaBinaria<T>
 {
 protected:
-    int calcula_altura(Nodo<T> *tmp)
+    Nodo<T> *rotacao_direita(Nodo<T> *y)
     {
-        if (tmp == nullptr)
-        {
-            return 0;
-        }
-        int altura_esquerda = this->calcula_altura(tmp->filhoEsquerda);
-        int altura_direita = this->calcula_altura(tmp->filhoDireita);
-        return altura_esquerda > altura_direita ? altura_esquerda + 1 : altura_direita + 1;
+        Nodo<T> *x = y->filhoEsquerda;
+        Nodo<T> *T2 = x->filhoDireita;
+
+        x->filhoDireita = y;
+        y->filhoEsquerda = T2;
+
+        y->altura = std::max(y->filhoEsquerda ? y->filhoEsquerda->altura : 0, y->filhoDireita ? (y->filhoDireita->altura + 1) : 0);
+        x->altura = std::max(x->filhoEsquerda ? x->filhoEsquerda->altura : 0, x->filhoDireita ? (x->filhoDireita->altura + 1) : 0);
+        return x;
     }
 
-    void rotacao_direita(Nodo<T> *tmp)
+    Nodo<T> *rotacao_esquerda(Nodo<T> *x)
     {
-        Nodo<T> *tmp_esquerda = tmp->filhoEsquerda;
-        Nodo<T> *tmp_esquerda_direita = tmp_esquerda->filhoDireita;
+        Nodo<T> *y = x->filhoDireita;
+        Nodo<T> *T2 = y->filhoEsquerda;
 
-        tmp_esquerda->filhoDireita = tmp;
-        tmp->filhoEsquerda = tmp_esquerda_direita;
-    }
+        y->filhoEsquerda = x;
+        x->filhoDireita = T2;
 
-    void rotacao_esquerda(Nodo<T> *tmp)
-    {
-        Nodo<T> *tmp_dir = tmp->filhoDireita;
-        tmp->filhoDireita = tmp_dir->filhoEsquerda;
-        tmp_dir->filhoEsquerda = tmp;
-        tmp->altura = this->calcula_altura(tmp);
-        tmp_dir->altura = this->calcula_altura(tmp_dir);
-        tmp = tmp_dir;
-    }
+        x->altura = std::max(x->filhoEsquerda ? x->filhoEsquerda->altura : 0, x->filhoDireita ? (x->filhoDireita->altura + 1) : 0);
+        y->altura = std::max(y->filhoEsquerda ? y->filhoEsquerda->altura : 0, y->filhoDireita ? (y->filhoDireita->altura + 1) : 0);
 
-    void rotacao_esquerda_direita(Nodo<T> *tmp)
-    {
-        this->rotacao_esquerda(tmp->filhoEsquerda);
-        this->rotacao_direita(tmp);
-    }
-
-    void rotacao_direita_esquerda(Nodo<T> *tmp)
-    {
-        this->rotacao_direita(tmp->filhoDireita);
-        this->rotacao_esquerda(tmp);
-    }
-
-    void balanceia_arvore(Nodo<T> *tmp)
-    {
-        if (tmp == nullptr)
-        {
-            return;
-        }
-        int fator = this->fator_balanceamento(tmp);
-        if (fator > 1)
-        {
-            if (this->fator_balanceamento(tmp->filhoEsquerda) > 0)
-            {
-                this->rotacao_direita(tmp);
-            }
-            else
-            {
-                this->rotacao_esquerda_direita(tmp);
-            }
-        }
-        else if (fator < -1)
-        {
-            if (this->fator_balanceamento(tmp->filhoDireita) < 0)
-            {
-                this->rotacao_esquerda(tmp);
-            }
-            else
-            {
-                this->rotacao_direita_esquerda(tmp);
-            }
-        }
-        this->balanceia_arvore(tmp->filhoEsquerda);
-        this->balanceia_arvore(tmp->filhoDireita);
+        return y;
     }
 
     int fator_balanceamento(Nodo<T> *tmp)
     {
-        int altura_esquerda = tmp->filhoEsquerda != nullptr ? tmp->filhoEsquerda->altura : 0;
-        int altura_direita = tmp->filhoDireita != nullptr ? tmp->filhoDireita->altura : 0;
-        return altura_esquerda - altura_direita;
+        if (tmp != nullptr)
+        {
+            int altura_esquerda = tmp->filhoEsquerda != nullptr ? tmp->filhoEsquerda->altura : -1;
+            int altura_direita = tmp->filhoDireita != nullptr ? tmp->filhoDireita->altura : -1;
+            return altura_esquerda - altura_direita;
+        }
+        return 0;
     }
 
-    void inserir_rec(T chave, Nodo<T> *tmp)
+    Nodo<T> *inserir_rec(T chave, Nodo<T> *tmp)
     {
-        int altura = 0;
         if (chave < tmp->chave)
         {
             if (tmp->filhoEsquerda != nullptr)
             {
-                inserir_rec(chave, tmp->filhoEsquerda);
-                altura = tmp->filhoEsquerda->altura;
+                tmp->filhoEsquerda = inserir_rec(chave, tmp->filhoEsquerda);
             }
             else
             {
@@ -114,8 +68,7 @@ protected:
         {
             if (tmp->filhoDireita != nullptr)
             {
-                inserir_rec(chave, tmp->filhoDireita);
-                altura = tmp->filhoDireita->altura > altura ? tmp->filhoDireita->altura : altura;
+                tmp->filhoDireita = inserir_rec(chave, tmp->filhoDireita);
             }
             else
             {
@@ -123,35 +76,147 @@ protected:
                 tmp->filhoDireita->chave = chave;
             }
         }
-        
-        altura++;
-        tmp->altura = altura;
 
-        int balance = fator_balanceamento(node);
+        // altura++;
+        // tmp->altura = altura;
+        tmp->altura = 1 + std::max(tmp->filhoEsquerda ? tmp->filhoEsquerda->altura : 0, tmp->filhoDireita ? tmp->filhoDireita->altura : 0);
 
-        // If this node becomes unbalanced, then
-        // there are 4 cases
+        int balance = fator_balanceamento(tmp);
 
-        // Left Left Case
         if (balance > 1 && chave < tmp->filhoEsquerda->chave)
-            return rightRotate(tmp);
-
-        // Right Right Case
-        if (balance < -1 && chave > tmp->filhoDireita->chave)
-            return leftRotate(tmp);
-
-        // Left Right Case
-        if (balance > 1 && chave > tmp->filhoEsquerda->chave)
         {
-            tmp->left = leftRotate(tmp->filhoEsquerda);
-            return rightRotate(tmp);
+            return rotacao_direita(tmp);
         }
 
-        // Right Left Case
-        if (balance < -1 && key < tmp->filhoDireita->chave)
+        if (balance < -1 && chave > tmp->filhoDireita->chave)
         {
-            tmp->filhoDireita = rightRotate(tmp->filhoDireita);
-            return leftRotate(tmp);
+            return rotacao_esquerda(tmp);
+        }
+
+        if (balance > 1 && chave > tmp->filhoEsquerda->chave)
+        {
+            tmp->filhoEsquerda = rotacao_esquerda(tmp->filhoEsquerda);
+            return rotacao_direita(tmp);
+        }
+
+        if (balance < -1 && chave < tmp->filhoDireita->chave)
+        {
+            tmp->filhoDireita = rotacao_direita(tmp->filhoDireita);
+            return rotacao_esquerda(tmp);
+        }
+        return tmp;
+    }
+
+    Nodo<T> *remover_rec(T chave, Nodo<T> *root)
+    {
+        if (root != nullptr)
+        {
+            if (chave > root->chave)
+            {
+                root->filhoDireita = remover_rec(chave, root->filhoDireita);
+                if (root->filhoDireita != nullptr)
+                {
+                    if (root->filhoDireita->altura == -1)
+                    {
+                        Nodo<T> *tmp = root->filhoDireita;
+                        root->filhoDireita = nullptr;
+                        delete tmp;
+                    }
+                }
+                if (root->filhoEsquerda != nullptr)
+                {
+                    if (root->filhoEsquerda->altura == -1)
+                    {
+                        Nodo<T> *tmp = root->filhoEsquerda;
+                        root->filhoEsquerda = nullptr;
+                        delete tmp;
+                    }
+                }
+            }
+            else if (chave < root->chave)
+            {
+                root-> filhoEsquerda = remover_rec(chave, root->filhoEsquerda);
+                if (root->filhoDireita != nullptr)
+                {
+                    if (root->filhoDireita->altura == -1)
+                    {
+                        Nodo<T> *tmp = root->filhoDireita;
+                        root->filhoDireita = nullptr;
+                        delete tmp;
+                    }
+                }
+                if (root->filhoEsquerda != nullptr)
+                {
+                    if (root->filhoEsquerda->altura == -1)
+                    {
+                        Nodo<T> *tmp = root->filhoEsquerda;
+                        root->filhoEsquerda = nullptr;
+                        delete tmp;
+                    }
+                }
+            }
+            else
+            {
+                if (root->filhoDireita == nullptr && root->filhoEsquerda == nullptr)
+                {
+                    root->altura = -1;
+                    return root;
+                }
+                else if (root->filhoDireita && root->filhoEsquerda)
+                {
+                    Nodo<T> *predecessor = MinhaArvoreDeBuscaBinaria<T>::get_max(root->filhoDireita);
+
+                    root->chave = predecessor->chave;
+                    remover_rec(predecessor->chave, root->filhoDireita);
+                }
+                else
+                {
+                    if (root->filhoDireita)
+                    {
+                        Nodo<T> *child = root->filhoDireita;
+                        root->chave = child->chave;
+                        root->filhoDireita = nullptr;
+                        root->altura = 0;
+                        delete child;
+                    }
+                    else
+                    {
+                        Nodo<T> *child = root->filhoEsquerda;
+                        root->chave = child->chave;
+                        root->filhoEsquerda = nullptr;
+                        root->altura = 0;
+                        delete child;
+                    }
+                }
+            }
+
+            root->altura = 1 + std::max(root->filhoEsquerda ? root->filhoEsquerda->altura : 0, root->filhoDireita ? root->filhoDireita->altura : 0);
+
+            int balance = fator_balanceamento(root);
+
+            if (balance > 1 && fator_balanceamento(root->filhoEsquerda) >= 0)
+            {
+                return rotacao_direita(root);
+            }
+
+            if (balance > 1 && fator_balanceamento(root->filhoEsquerda) < 0)
+            {
+                root->filhoEsquerda = rotacao_esquerda(root->filhoEsquerda);
+                return rotacao_direita(root);
+            }
+
+            if (balance < -1 &&
+                fator_balanceamento(root->filhoDireita) <= 0)
+                return rotacao_esquerda(root);
+
+            if (balance < -1 &&
+                fator_balanceamento(root->filhoDireita) > 0)
+            {
+                root->filhoDireita = rotacao_direita(root->filhoDireita);
+                return rotacao_esquerda(root);
+            }
+
+            return root;
         }
     }
 
@@ -160,16 +225,9 @@ public:
     {
         if (this->_raiz != nullptr)
         {
-            inserir_rec(chave, this->_raiz);
+            this->_raiz = inserir_rec(chave, this->_raiz);
 
-            if (this->_raiz->filhoEsquerda != nullptr)
-            {
-                this->_raiz->altura = this->_raiz->filhoEsquerda->altura + 1;
-            }
-            if (this->_raiz->filhoDireita != nullptr)
-            {
-                this->_raiz->altura = this->_raiz->altura - 1 + this->_raiz->filhoDireita->altura;
-            }
+            this->_raiz->altura = 1 + std::max(this->_raiz->filhoEsquerda ? this->_raiz->filhoEsquerda->altura : 0, this->_raiz->filhoDireita ? this->_raiz->filhoDireita->altura : 0);
         }
         else
         {
@@ -179,12 +237,7 @@ public:
     }
     virtual void remover(T chave)
     {
-        Nodo<T> *pai = this->_raiz;
-        Nodo<T> *filho = MinhaArvoreDeBuscaBinaria<T>::get_pai_rec(this->_raiz, pai, chave).value_or(nullptr);
-        MinhaArvoreDeBuscaBinaria<T>::remover_rec(this->_raiz, chave);
-
-        this->balanceia_arvore(pai);
-
+        this->_raiz = remover_rec(chave, this->_raiz);
         if (this->_raiz)
         {
             if (this->_raiz->altura == -1)
@@ -194,14 +247,7 @@ public:
             }
             else
             {
-                if (this->_raiz->filhoEsquerda != nullptr)
-                {
-                    this->_raiz->altura = this->_raiz->filhoEsquerda->altura + 1;
-                }
-                if (this->_raiz->filhoDireita != nullptr)
-                {
-                    this->_raiz->altura = this->_raiz->altura - 1 + this->_raiz->filhoDireita->altura;
-                }
+                this->_raiz->altura = 1 + std::max(this->_raiz->filhoEsquerda ? this->_raiz->filhoEsquerda->altura : 0, this->_raiz->filhoDireita ? this->_raiz->filhoDireita->altura : 0);
             }
         }
     }

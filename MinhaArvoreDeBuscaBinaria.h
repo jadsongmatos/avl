@@ -140,7 +140,7 @@ protected:
         }
     }
 
-    virtual void inserir_rec(T chave, Nodo<T> *tmp)
+    void inserir_rec(T chave, Nodo<T> *tmp)
     {
         int altura = 0;
         if (chave < tmp->chave)

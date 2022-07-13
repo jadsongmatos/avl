@@ -8,7 +8,7 @@ TEST(ArvoreAVLTest, InsercaoRotacaoDireitaSimples)
     for (int const e : {4, 3, 2, 1})
         arvore->inserir(e);
 
-    /*ASSERT_EQ(*arvore->altura(3), 2);
+    ASSERT_EQ(*arvore->altura(3), 2);
     ASSERT_EQ(*arvore->filhoEsquerdaDe(3), 2);
     ASSERT_EQ(*arvore->filhoDireitaDe(3), 4);
 
@@ -24,7 +24,7 @@ TEST(ArvoreAVLTest, InsercaoRotacaoDireitaSimples)
     ASSERT_TRUE(!arvore->filhoEsquerdaDe(4));
     ASSERT_TRUE(!arvore->filhoDireitaDe(4));
 
-    delete arvore;*/
+    delete arvore;
 }
 
 TEST(ArvoreAVLTest, InsercaoRotacaoEsquerdaSimples)
